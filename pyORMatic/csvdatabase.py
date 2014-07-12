@@ -1,41 +1,38 @@
 import pyORMatic
 import csv
+from pyORMatic.databaseobject import DatabaseObject
 
 __author__ = 'Alex'
 
 class CSVDatabase(pyORMatic.pyormatic.Pyormatic):
 
+    # Member variables
+
+
     def __init__(self):
-        self.current_objs = dict()
+        self._current_objs = dict()
+        self._table_cache = dict()
 
     def get_fields(self, table, **kwargs):
-        objs = list()
-        with open(table + '.csv', newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for (line_number, row) in enumerate(reader):
-                valid_object = True
-                for (key, value) in row.iteritems():
-                    if key in kwargs:
-                        if kwargs[key] != value:
-                            valid_object = False
-                            break
-                if valid_object:
-                    obj = self.__create_object_from_query(row, line_number)
-                    objs.append(obj)
-                    self.current_objs[obj] = line_number
-        return objs
+        if table not in self._table_cache:
+            self.__build_cache(table)
+        return filter(lambda key: set(kwargs.items()).issubset(set(key.items())),
+                      self._table_cache[table])
 
     def put(self, table, *objs):
-        edit_list = [obj for obj in objs if obj in self.current_objs]
-        append_list = [obj for obj in objs if obj not in self.current_objs]
+        edit_list = [(self._current_objs[obj], obj) for obj in objs if obj in self._current_objs]
+        append_list = [obj for obj in objs if obj not in self._current_objs]
         with open(table + '.csv', newline='') as csvfile:
             writer = csv.DictWriter(csvfile)
-            for (line_number, row) in enumerate(
+            for (line_number, row) in enumerate(writer):
+                if line_number == edit_list[0][0]:
 
-
-
-    def __create_object_from_query(self, query_res, line_number):
-        pass
+    def __build_cache(self, table):
+        new_cache = list()
+        with open(table + '.csv', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            new_cache = [DatabaseObject(row) for row in reader]
+        self._table_cache[table] = new_cache
 
     @property
     def database_name(self):
