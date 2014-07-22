@@ -6,19 +6,18 @@ __author__ = 'Alex'
 
 class DatabaseObject(MutableMapping):
     def __init__(self, table, **kwargs):
-        self._table = table
-        self._columns = deepcopy(kwargs)
+        self.__table = table
+        self.__columns = deepcopy( )
 
     def __getattr__(self, item):
-        self._columns = self._table.get_fields(self._columns)
-        if item in self._columns:
-            return self._columns[item]
+        self.__columns = self.__table.get_fields(self.__columns)
+        if item in self.__columns:
+            return self.__columns[item]
         else:
             raise AttributeError
 
     def __setattr__(self, key, value):
-        self._columns[key] = value
-        self._table.put(self)
+        self.__columns[key] = value
 
     def __getitem__(self, item):
         return self.__getattr__(item)
@@ -27,18 +26,18 @@ class DatabaseObject(MutableMapping):
         return self.__setattr__(key, value)
 
     def __delitem__(self, key):
-        return NotImplemented
+        del self.__columns[key]
 
     def __iter__(self):
         return NotImplemented
 
     def __len__(self):
-        return len(self._columns)
+        return len(self.__columns)
 
     def __eq__(self, other):
         if isinstance(other, DatabaseObject):
-            return self._table == other._table \
-               and self._columns == other._columns
+            return self.__table == other.__table \
+               and self.__columns == other.__columns
         else:
             return NotImplemented
 
@@ -46,4 +45,4 @@ class DatabaseObject(MutableMapping):
         return not self == other
 
     def __hash__(self):
-        return hash(self._table) ^ hash(self._columns)
+        return hash(self.__table) ^ hash(self.__columns)

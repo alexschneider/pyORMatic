@@ -3,10 +3,9 @@ __author__ = 'Alex'
 
 class Table:
 
-    def __init__(self, database, table_name, primary_key):
-        self._database = database
-        self._table_name = table_name
-        self._primary_key = primary_key
+    def __init__(self, database, table_name):
+        self.__database = database
+        self.__table_name = table_name
 
     def __iter__(self):
         return self
@@ -15,18 +14,13 @@ class Table:
         pass
 
     def __hash__(self):
-        return hash(self._database.database_type()) ^ hash(self._table_name)
-
-    def get_id(self, id):
-        kwarg = {self._primary_key: id}
-        return self._database.get_fields(self._table_name, **kwarg)
+        return hash(self.__database.database_type()) ^ hash(self.__table_name)
 
     def get_fields(self, **kwargs):
-        return self._database.get_fields(self._table_name, kwargs)
+        return self.__database.get_fields(self.__table_name, kwargs)
 
-    def put(self, *obj):
-        return self._database.put(self._table_name, obj)
+    def put(self, *objs):
+        return self.__database.put(self.__table_name, objs)
 
-    @property
-    def num_rows(self):
-        pass
+    def delete(self, *objs):
+        return self.__database.delete(self.__table_name, objs)

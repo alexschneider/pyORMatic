@@ -14,23 +14,32 @@ class Pyormatic():
         pass
 
     @abstractmethod
-    def __create_object_from_query(self, query_res):
+    def delete(self, table, objs):
         pass
 
     @property
-    @abstractmethod
     def database_name(self):
-        pass
+        return self.__name
+
+    @property
+    def database_directory(self):
+        return self.__directory
 
     @property
     @abstractmethod
     def database_type(self):
         pass
 
-
     @staticmethod
-    def construct_database(database_type):
-        raise NotImplemented
+    def construct_database(database_type, database_name, database_directory):
+        if database_type == "json":
+            from jsondatabase import JSONDatabase
+            return JSONDatabase(database_name, database_directory)
+        else:
+            raise NotImplementedError
+    def __init__(self, name, directory):
+        self.__name = name
+        self.__directory = directory
 
 
 if __name__ == "main":
