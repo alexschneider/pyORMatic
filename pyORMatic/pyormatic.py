@@ -33,8 +33,8 @@ class Pyormatic():
     @staticmethod
     def construct_database(database_type, database_name, database_directory):
         if database_type == "json":
-            from jsondatabase import JSONDatabase
-            return JSONDatabase(database_name, database_directory)
+            from pickledatabase import PickleDatabase
+            return PickleDatabase(database_name, database_directory)
         else:
             raise NotImplementedError
     def __init__(self, name, directory):

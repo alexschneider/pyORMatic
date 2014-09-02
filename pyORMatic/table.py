@@ -8,19 +8,19 @@ class Table:
         self.__table_name = table_name
 
     def __iter__(self):
-        return self
-
-    def __next__(self):
-        pass
+        return iter(self.__database.get_fields(self.__table_name))
 
     def __hash__(self):
-        return hash(self.__database.database_type()) ^ hash(self.__table_name)
+        return hash(self.__database.database_type) ^ hash(self.__table_name)
 
     def get_fields(self, **kwargs):
-        return self.__database.get_fields(self.__table_name, kwargs)
+        return self.__database.get_fields(self.__table_name, **kwargs)
+
+    def get_one(self, **kwargs):
+        return next(self.get_fields(**kwargs))
 
     def put(self, *objs):
-        return self.__database.put(self.__table_name, objs)
+        return self.__database.put(self.__table_name, *objs)
 
     def delete(self, *objs):
         return self.__database.delete(self.__table_name, objs)

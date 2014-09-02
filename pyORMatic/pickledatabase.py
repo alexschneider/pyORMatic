@@ -1,41 +1,50 @@
 import os
 import shutil
 import tempfile
-from databaseobject import DatabaseObject
 from pyormatic import Pyormatic
-import json
+import pickle
+import itertools
 
 __author__ = 'alex'
 
-class JSONDatabase(Pyormatic):
+
+class PickleDatabase(Pyormatic):
 
     def __init__(self, name, directory):
         super().__init__(name, directory)
         self.__cache = dict()
         self.__initialize_cache()
-
     @property
     def database_type(self):
-        return 'json"'
+        return 'pickle'
 
     def get_fields(self, table, **kwargs):
+        if table not in self.__cache:
+            return list()
+        if len(kwargs) == 0:
+            return self.__cache[table]
         return filter(lambda x: all(item in x.items() for item in kwargs.items()), self.__cache[table])
 
     def put(self, table, *objs):
-        self.__cache[table].extend(objs)
+        chain = itertools.chain(*objs)
+        if table not in self.__cache:
+            self.__cache[table] = list()
+        self.__cache[table].extend(chain)
         self.__flush_cache(table)
 
     def delete(self, table, *objs):
-        for obj in objs:
+        chain = itertools.chain(*objs)
+        for obj in chain:
             if obj in self.__cache[table]:
                 self.__cache[table].remove(obj)
+        self.__flush_cache(table)
 
     def __flush_cache(self, table):
-        t = tempfile.NamedTemporaryFile(delete=False)
-        json.dump(self.__cache[table], t, separators=(',', ':'))
+        t = tempfile.NamedTemporaryFile(delete=False) # Defaults to binary mode - for any loading, ensure that binary mode is selected
+        pickle.dump(self.__cache[table], t)
         tmp_file_name = t.name
         t.close()
-        shutil.copy(tmp_file_name, self.database_directory + table + '.' + self.database_type)
+        shutil.copy(tmp_file_name, self.database_directory + '/' + table + '.' + self.database_type)
 
     def __initialize_cache(self):
         current_dir_files = list()
@@ -46,5 +55,5 @@ class JSONDatabase(Pyormatic):
             self.__initialize_file_cache(file)
 
     def __initialize_file_cache(self, file):
-        with open(file) as f:
-            self.__cache[os.path.basename(file)] = json.load(f, object_hook=DatabaseObject)
+        with open(self.database_directory + '/' + file, 'rb') as f:
+            self.__cache[os.path.splitext(file)[0]] = pickle.load(f)
